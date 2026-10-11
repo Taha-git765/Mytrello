@@ -13,8 +13,8 @@ import {
 } from '@dnd-kit/core'
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 import { ListColumn } from './ListColumn'
-import { createList } from '@/actions/list'
-import { createCard, updateCardsOrder } from '@/actions/card'
+import { createList, updateList, deleteList } from '@/actions/list'
+import { createCard, updateCard, deleteCard, updateCardsOrder } from '@/actions/card'
 
 interface KanbanBoardProps {
   initialLists: any[]
@@ -26,7 +26,6 @@ export function KanbanBoard({ initialLists = [], boardId }: KanbanBoardProps) {
   const [isAddingList, setIsAddingList] = useState(false)
   const [newListTitle, setNewListTitle] = useState('')
 
-  // Synchroniser le state local quand les données serveur changent
   useEffect(() => {
     setLists(initialLists)
   }, [initialLists])
@@ -122,7 +121,7 @@ export function KanbanBoard({ initialLists = [], boardId }: KanbanBoardProps) {
     }
   }
 
-  // Création optimiste d'une liste
+  // --- Gestion des Listes ---
   const handleAddList = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newListTitle.trim()) return
@@ -131,14 +130,25 @@ export function KanbanBoard({ initialLists = [], boardId }: KanbanBoardProps) {
     setNewListTitle('')
     setIsAddingList(false)
 
-    // Ajout optimiste
     const tempId = `temp-${Date.now()}`
     setLists((prev) => [...prev, { id: tempId, title, cards: [] }])
 
     await createList(boardId, title)
   }
 
-  // Création optimiste d'une carte
+  const handleUpdateList = async (listId: string, newTitle: string) => {
+    setLists((prev) =>
+      prev.map((l) => (l.id === listId ? { ...l, title: newTitle } : l))
+    )
+    await updateList(listId, boardId, newTitle)
+  }
+
+  const handleDeleteList = async (listId: string) => {
+    setLists((prev) => prev.filter((l) => l.id !== listId))
+    await deleteList(listId, boardId)
+  }
+
+  // --- Gestion des Cartes ---
   const handleAddCard = async (listId: string, cardTitle: string) => {
     const tempId = `temp-${Date.now()}`
     setLists((prev) =>
@@ -156,6 +166,38 @@ export function KanbanBoard({ initialLists = [], boardId }: KanbanBoardProps) {
     await createCard(listId, boardId, cardTitle)
   }
 
+  const handleUpdateCard = async (listId: string, cardId: string, newTitle: string) => {
+    setLists((prev) =>
+      prev.map((l) => {
+        if (l.id === listId) {
+          return {
+            ...l,
+            cards: l.cards.map((c: any) =>
+              c.id === cardId ? { ...c, title: newTitle } : c
+            ),
+          }
+        }
+        return l
+      })
+    )
+    await updateCard(cardId, boardId, newTitle)
+  }
+
+  const handleDeleteCard = async (listId: string, cardId: string) => {
+    setLists((prev) =>
+      prev.map((l) => {
+        if (l.id === listId) {
+          return {
+            ...l,
+            cards: l.cards.filter((c: any) => c.id !== cardId),
+          }
+        }
+        return l
+      })
+    )
+    await deleteCard(cardId, boardId)
+  }
+
   return (
     <DndContext
       sensors={sensors}
@@ -170,6 +212,10 @@ export function KanbanBoard({ initialLists = [], boardId }: KanbanBoardProps) {
             list={list}
             boardId={boardId}
             onAddCard={handleAddCard}
+            onUpdateList={handleUpdateList}
+            onDeleteList={handleDeleteList}
+            onUpdateCard={handleUpdateCard}
+            onDeleteCard={handleDeleteCard}
           />
         ))}
 

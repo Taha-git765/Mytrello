@@ -1,5 +1,5 @@
 import { getBoards, createBoard } from '@/actions/board'
-import Link from 'next/link'
+import { BoardCard } from '@/components/BoardCard'
 
 export const instant = false;
 
@@ -33,18 +33,7 @@ export default async function Home() {
         {/* Boards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {boards.map((board) => (
-            <Link
-              href={`/board/${board.id}`}
-              key={board.id}
-              className="group relative h-32 rounded-xl p-4 bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all flex flex-col justify-between overflow-hidden"
-            >
-              <h2 className="text-base font-bold drop-shadow-sm leading-snug break-words">
-                {board.title}
-              </h2>
-              <span className="text-xs text-white/70 group-hover:text-white transition font-medium flex items-center gap-1">
-                Ouvrir le tableau →
-              </span>
-            </Link>
+            <BoardCard key={board.id} board={board} />
           ))}
 
           {/* Form to Create a Board */}
@@ -54,7 +43,7 @@ export default async function Home() {
               const title = formData.get('title') as string
               if (title) await createBoard(title)
             }}
-            className="h-32 border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-xl p-4 flex flex-col justify-between bg-white hover:bg-blue-50/20 transition group"
+            className="h-36 border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-xl p-4 flex flex-col justify-between bg-white hover:bg-blue-50/20 transition group"
           >
             <input
               type="text"

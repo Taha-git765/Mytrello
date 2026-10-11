@@ -21,6 +21,22 @@ export async function createCard(listId: string, boardId: string, title: string)
   return card
 }
 
+export async function updateCard(id: string, boardId: string, title: string) {
+  const card = await db.card.update({
+    where: { id },
+    data: { title }
+  })
+  revalidatePath(`/board/${boardId}`)
+  return card
+}
+
+export async function deleteCard(id: string, boardId: string) {
+  await db.card.delete({
+    where: { id }
+  })
+  revalidatePath(`/board/${boardId}`)
+}
+
 export async function updateCardsOrder(items: { id: string, listId: string, order: number }[], boardId: string) {
   const queries = items.map((item) =>
     db.card.update({
